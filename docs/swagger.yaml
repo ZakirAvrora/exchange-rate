@@ -1,0 +1,155 @@
+basePath: /v1
+definitions:
+  v1.doRefreshRequest:
+    properties:
+      base:
+        example: EUR
+        type: string
+      secondary:
+        example: MXN
+        type: string
+    required:
+    - base
+    - secondary
+    type: object
+  v1.exchangeResponse:
+    properties:
+      rate:
+        type: number
+      update_time:
+        type: string
+    type: object
+  v1.identiferResponse:
+    properties:
+      identifier:
+        type: string
+    type: object
+  v1.response:
+    properties:
+      error:
+        example: error message
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Description of a currency exchange service endpoints
+  title: Currency Exchange Rate API
+  version: "1.0"
+paths:
+  /exchangerates/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Display exchange rate value and update time for corresponding identifier
+        request
+      operationId: get-rate-by-identifier
+      parameters:
+      - description: unique identifier
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.exchangeResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Getting rate by identifier
+      tags:
+      - exchangerates
+  /exchangerates/latest:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        The request specifies the currency pair code.
+        In the response, the service provides the price value and update time.
+      operationId: get-latest-rate
+      parameters:
+      - description: first currency code of pair
+        enum:
+        - EUR
+        in: query
+        name: base
+        required: true
+        type: string
+      - description: second currency code of pair
+        enum:
+        - BTC
+        - MXN
+        - USD
+        - BYR
+        - AED
+        - KZT
+        - RUB
+        - XAU
+        - XAG
+        - LYD
+        in: query
+        name: secondary
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.exchangeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Getting latest exchange rate for currency pair
+      tags:
+      - exchangerates
+  /exchangerates/refresh:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        The service assigns an identifier to the update request.
+        The service updates quotes in the background, i.e. the request handler do not perform the update.
+      operationId: update-exchange-rate
+      parameters:
+      - description: Set up currency pair
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.doRefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.identiferResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Update exchange rate
+      tags:
+      - exchangerates
+swagger: "2.0"

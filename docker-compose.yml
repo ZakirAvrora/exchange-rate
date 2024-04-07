@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: exchange_service
+    build: .
+    ports:
+      - '8080:8080'
+    restart: on-failure
+    volumes:
+      - api:/usr/src/app/
+    depends_on:
+      - database
+    networks:
+      - exchange_rate_stack
+
+  database:
+    container_name: database_app
+    image: postgres:15-alpine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${PG_DATABASE_USER}
+      - POSTGRES_PASSWORD=${PG_DATABASE_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE_DB}
+      - DATABASE_HOST=${PG_DATABASE_HOST}
+    ports:
+      - '5432:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - exchange_rate_stack
+
+volumes:
+  api:
+  db:
+
+networks:
+  exchange_rate_stack:
+    driver: bridge

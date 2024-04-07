@@ -1,0 +1,220 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Description of a currency exchange service endpoints",
+        "title": "Currency Exchange Rate API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/v1",
+    "paths": {
+        "/exchangerates/latest": {
+            "get": {
+                "description": "The request specifies the currency pair code.\nIn the response, the service provides the price value and update time.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchangerates"
+                ],
+                "summary": "Getting latest exchange rate for currency pair",
+                "operationId": "get-latest-rate",
+                "parameters": [
+                    {
+                        "enum": [
+                            "EUR"
+                        ],
+                        "type": "string",
+                        "description": "first currency code of pair",
+                        "name": "base",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "BTC",
+                            "MXN",
+                            "USD",
+                            "BYR",
+                            "AED",
+                            "KZT",
+                            "RUB",
+                            "XAU",
+                            "XAG",
+                            "LYD"
+                        ],
+                        "type": "string",
+                        "description": "second currency code of pair",
+                        "name": "secondary",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.exchangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/exchangerates/refresh": {
+            "post": {
+                "description": "The service assigns an identifier to the update request.\nThe service updates quotes in the background, i.e. the request handler do not perform the update.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchangerates"
+                ],
+                "summary": "Update exchange rate",
+                "operationId": "update-exchange-rate",
+                "parameters": [
+                    {
+                        "description": "Set up currency pair",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.doRefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.identiferResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/exchangerates/{id}": {
+            "get": {
+                "description": "Display exchange rate value and update time for corresponding identifier request",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchangerates"
+                ],
+                "summary": "Getting rate by identifier",
+                "operationId": "get-rate-by-identifier",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "unique identifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.exchangeResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "v1.doRefreshRequest": {
+            "type": "object",
+            "required": [
+                "base",
+                "secondary"
+            ],
+            "properties": {
+                "base": {
+                    "type": "string",
+                    "example": "EUR"
+                },
+                "secondary": {
+                    "type": "string",
+                    "example": "MXN"
+                }
+            }
+        },
+        "v1.exchangeResponse": {
+            "type": "object",
+            "properties": {
+                "rate": {
+                    "type": "number"
+                },
+                "update_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.identiferResponse": {
+            "type": "object",
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.response": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "error message"
+                }
+            }
+        }
+    }
+}
