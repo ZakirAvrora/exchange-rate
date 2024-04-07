@@ -53,23 +53,15 @@ func Run(cfg *config.Config) {
 		log.Fatalln(err)
 	}
 
-	ch := recorder.Queue()
-	go func() {
-		for {
-			ctx := context.Background()
-			t := <-ch
-			func(r exchangerates.Record) {
-				rate, err := client.GetLatestRate(ctx, r.Base, r.Secondary)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				log.Println("Rate:", rate)
-				if err = recorder.Update(ctx, r.Identifier, rate.Value); err != nil {
-					log.Fatalln(err)
-				}
-			}(t)
-		}
-	}()
+	ctx, cancel := context.WithCancel(context.Background())
+	consumer, done := NewConsumer(
+		ctx,
+		Backends{
+			ExternalAPIClient: client,
+			RecordsService:    recorder,
+		}, recorder.Queue())
+
+	consumer.Start()
 
 	// HTTP Server
 	handler := gin.New()
@@ -82,15 +74,18 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		log.Println("app - Run - signal: " + s.String())
+		log.Println("app run signal: " + s.String())
 	case err = <-httpServer.Notify():
-		log.Println(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		log.Println(fmt.Errorf("app run error: %w", err))
 	}
 
 	// Gracefull Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
-		log.Println(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		log.Println(fmt.Errorf("httpServer shutdown error: %w", err))
 	}
 
+	// Gracefull consumer stop
+	cancel()
+	<-done
 }

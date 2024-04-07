@@ -72,10 +72,18 @@ func (r *recordsRepository) FetchLatest(ctx context.Context, base string, second
 	return &record, nil
 }
 
-func (r *recordsRepository) Update(ctx context.Context, identifier string, rate float64) error {
+func (r *recordsRepository) ShiftUpdated(ctx context.Context, identifier string, rate float64) error {
 	current_time := time.Now()
 	_, err := r.connPool.Exec(ctx, "UPDATE records SET rate = $1, status = $2, updated_at = $3 where identifier = $4",
 		rate, exchangerates.StatusUpdated, current_time, identifier)
+
+	return err
+}
+
+func (r *recordsRepository) ShiftFailed(ctx context.Context, identifier string) error {
+	current_time := time.Now()
+	_, err := r.connPool.Exec(ctx, "UPDATE records SET status = $1, updated_at = $2 where identifier = $3",
+		exchangerates.StatusFailed, current_time, identifier)
 
 	return err
 }

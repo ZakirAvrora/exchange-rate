@@ -21,7 +21,7 @@ func NewService(repo RecordsRepo) *Recorder {
 	}
 }
 
-func (r *Recorder) Queue() chan Record {
+func (r *Recorder) Queue() <-chan Record {
 	return r.queue
 }
 
@@ -78,9 +78,14 @@ func (r *Recorder) FetchLatest(ctx context.Context, base string, secondary strin
 	return record, nil
 }
 
-func (r *Recorder) Update(ctx context.Context, identifeir string, rate float64) error {
-	err := r.repo.Update(ctx, identifeir, rate)
-	return err
+func (r *Recorder) ShiftUpdated(ctx context.Context, identifeir string, rate float64) error {
+	err := r.repo.ShiftUpdated(ctx, identifeir, rate)
+	return fmt.Errorf("shifting status to updated error: %w", err)
+}
+
+func (r *Recorder) ShiftFailed(ctx context.Context, identifeir string) error {
+	err := r.repo.ShiftFailed(ctx, identifeir)
+	return fmt.Errorf("shifting status to failed error: %w", err)
 }
 
 func validPair(base, secondary string) error {
