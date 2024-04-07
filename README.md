@@ -5,6 +5,7 @@ Requires `docker-compose`
 
 ## Launching the application
 - Clone the repository
+- Clone a config content of `.env.example` to `.env` file
 - To start the application, write `docker-composer up -d` on the command line
 
 ## Service
